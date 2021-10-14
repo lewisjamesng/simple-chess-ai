@@ -86,15 +86,17 @@ function init () {
 
         updateStatus(boardNumber)
 
-        switch (boardNumber) {
-            case 0:
-                useRandom(0)
-                break
-            case 1:
-                useMinMax(3, 'b', boardNumber)
-                break
+        if(!game.game_over()) {
+            switch (boardNumber) {
+                case 0:
+                    useRandom(0)
+                    break
+                case 1:
+                    useMinMax(3, 'b', boardNumber)
+                    break
+            }
+            updateStatus(boardNumber)
         }
-        updateStatus(boardNumber)
     }
 
     function useRandom(boardNumber) {
@@ -117,10 +119,11 @@ function init () {
 
         const sign = maxing ? 1 : -1;
         const moves = game.moves()
-        let currentBest = 9999 * -sign
-        let bestMove = null
+        let currentBest = 99999 * -sign
+        let bestMove = moves[0]
 
         for (let i = 0; i < moves.length; i++) {
+
             game.move(moves[i])
             const eval = minMax(game,depth - 1, !maxing, false)
             if (eval * sign > currentBest * sign) {
@@ -129,6 +132,8 @@ function init () {
             }
             game.undo()
         }
+
+
         return root ? bestMove : currentBest
     }
 
@@ -136,43 +141,48 @@ function init () {
     //
     // }
 
-    function evaluatePosition(game) {
+    function evaluatePosition(game, positional) {
         const grid = game.board()
         let current = 0;
+
+        function positionalVal (piece, i, j) {
+            return 0
+        }
+
+        function pieceVal(piece) {
+            if (piece === null) return 0
+            var val;
+
+            switch (piece.type) {
+                case 'p':
+                    val = 1
+                    break
+                case 'n':
+                    val = 3
+                    break
+                case 'b':
+                    val = 3.5
+                    break
+                case 'r':
+                    val = 5
+                    break
+                case 'q':
+                    val = 9
+                    break
+                case 'k':
+                    val = 90
+                    break
+            }
+
+            return val * (piece.color === "w" ? 1 : -1)
+        }
+
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
-                current += pieceVal(grid[i][j])
+                current += pieceVal(grid[i][j]) + ((positional && grid[i][j] != null) ? positionalVal(grid[i][j], i, j) : 0)
             }
         }
         return current
-    }
-
-    function pieceVal(piece) {
-        if (piece === null) return 0
-        var val;
-
-        switch (piece.type) {
-            case 'p':
-                val = 1
-                break
-            case 'n':
-                val = 3
-                break
-            case 'b':
-                val = 3.5
-                break
-            case 'r':
-                val = 5
-                break
-            case 'q':
-                val = 9
-                break
-            case 'k':
-                val = 90
-                break
-        }
-
-        return val * (piece.color === "w" ? 1 : -1)
     }
 
 // update the board position after the piece snap
@@ -237,10 +247,12 @@ function init () {
         pgnObj.html(game.pgn())
     }
 
+    const fen = "1rb3kr/pp1p1p2/2p2B1p/8/4Q3/P4N2/1PP2PPP/nN2R1K1 w - - 4 23"
+
     function config(boardNumber) {
         return {
             draggable: true,
-            position: 'start',
+            position: fen,
             onDragStart: onDragStartList[boardNumber],
             onDrop: onDropList[boardNumber],
             onSnapEnd: onSnapEndList[boardNumber]
@@ -259,10 +271,14 @@ function init () {
     // $('#startBtn2').on('click', board2.start)
     // $('#startBtn3').on('click', board3.start)
 
+
+
     function resetGame(boardNumber) {
         boardList[boardNumber].start()
         gameList[boardNumber].reset()
     }
+
+    gameList[1].load(fen)
 
     updateStatus(0)
     updateStatus(1)
