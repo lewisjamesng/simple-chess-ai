@@ -8,7 +8,10 @@
 
     <link rel="icon" href="/favicon.ico">
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600|Roboto+Mono">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Arvo&display=swap');
+    </style>
+    <link rel = stylesheet href="css/main.css">
     <link rel="stylesheet" href="css/chessboard-1.0.0.min.css" />
 </head>
 
@@ -20,9 +23,10 @@
     </div>
 </div>
 
-<main>
-    <div>
+<main class="wrapper">
+    <div class="box">
         <h1>Making Random Moves</h1>
+        <p>Generating moveset using chess.js to handle the game data and then chessboard.js for visualisation</p>
         <div id="board0" style="width: 400px"></div>
         <button id="startBtn0">Start Position</button>
         <br/>
@@ -35,8 +39,11 @@
         <div id="pgn0"></div>
     </div>
 
-    <div>
+    <div class="box">
         <h1>Using Minmax Depth 3 Algorithm</h1>
+        <p>Current evaluation function uses only material value and sees no point in advancing pieces unless it results
+            in material gain. This explains why sometimes it juggles the rooks behind the lines of pawns! Current
+            time complexity is: <br/><br/><i>T(f) = b^d</i></p>
         <div id="board1" style="width: 400px"></div>
         <button id="startBtn1">Start Position</button>
         <br/>
@@ -49,35 +56,42 @@
         <div id="pgn1"></div>
     </div>
 
-<!--    <div>-->
-<!--        <h1>Using Positional Evaluation Function</h1>-->
-<!--        <div id="board2" style="width: 400px"></div>-->
-<!--        <button id="startBtn2">Start Position</button>-->
-<!--        <br/>-->
+    <div class="box">
+        <h1>Using Full Alpha-Beta Minmax Algorithm</h1>
+        <p>The minMax tree is now being pruned using an alpha beta algorithm - this results in a best case performance
+            of: <br/><br/><i>T(f) = sqrt(b^d)</i><br/>
+        <div id="board2" style="width: 400px"></div>
+        <button id="startBtn2">Start Position</button>
+        <br/>
 
-<!--        <label>Status:</label>-->
-<!--        <div id="status2"></div>-->
-<!--        <label>FEN:</label>-->
-<!--        <div id="fen2"></div>-->
-<!--        <label>PGN:</label>-->
-<!--        <div id="pgn2"></div>-->
-<!--    </div>-->
+        <label>Status:</label>
+        <div id="status2"></div>
+        <label>FEN:</label>
+        <div id="fen2"></div>
+        <label>PGN:</label>
+        <div id="pgn2"></div>
+    </div>
 
-<!--    <div>-->
-<!--        <h1>Using Full Alpha-Beta Minmax Algorithm</h1>-->
-<!--        <div id="board3" style="width: 400px"></div>-->
-<!--        <button id="startBtn3">Start Position</button>-->
-<!--        <br/>-->
+    <div class="box">
+        <h1>Improved Positional Evaluation Function</h1>
+        <p>Normalised the positional value matrix by dividing by largest absolute element's value so max absolute
+            element value is 1. Evaluation of position is now: <br/><br/><i>posVal = materialVal[i][j] + 0.1 * positionalVal[i][j].</i><br/><br/>
+            Positional value varies from piece to piece</p>
 
-<!--        <label>Status:</label>-->
-<!--        <div id="status3"></div>-->
-<!--        <label>FEN:</label>-->
-<!--        <div id="fen3"></div>-->
-<!--        <label>PGN:</label>-->
-<!--        <div id="pgn3"></div>-->
-<!--    </div>-->
+        <div id="board3" style="width: 400px"></div>
+        <button id="startBtn3">Start Position</button>
+        <br/>
 
+        <label>Status:</label>
+        <div id="status3"></div>
+        <label>FEN:</label>
+        <div id="fen3"></div>
+        <label>PGN:</label>
+        <div id="pgn3"></div>
+    </div>
 </main>
+
+<footer>AI Controller and website built by Lewis Ng<br/><a href = "https://github.com/lewisjamesng">GitHub</a></footer>
 
 
 <script src="js/chess.js"></script>

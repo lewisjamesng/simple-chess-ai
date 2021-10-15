@@ -1,0 +1,35 @@
+body {
+    font-family: 'Arvo', serif;
+}
+
+.hero-wrapper {
+    text-align: center;
+    padding-bottom: 2.5%;
+}
+
+.wrapper {
+    display: grid;
+    grid-template-columns: 45% 45%;
+    grid-column-gap: 10%;
+    grid-row-gap: 5%;
+    padding-left: 10%;
+    padding-right: 10%;
+    margin-bottom: 10%;
+}
+
+.box {
+    background-color: #444;
+    color: #fff;
+    border-radius: 5%;
+    padding: 20px;
+    font-size: 1.5em;
+    min-height: 100%;
+}
+
+footer {
+    text-align: center;
+}
+
+a {
+    color: #444444;
+}

@@ -2,10 +2,12 @@ function init () {
 
     let board0, board1, board2, board3
     board0 = board1 = board2 = board3 = null
+    const boardList = [board0, board1, board2, board3]
 
-    let game0, game1, game2, game3
-    game0 = game1 = game2 = game3 = new Chess()
-    const gameList = [game0, game1, game2, game3]
+    const gameList = []
+    for (let i = 0; i < 4; i++) {
+        gameList[i] = new Chess()
+    }
 
     let $status0 = $('#status0')
     let $status1 = $('#status1')
@@ -25,8 +27,6 @@ function init () {
     let $pgn3 = $('#pgn3')
     const pgnList = [$pgn0, $pgn1, $pgn2, $pgn3]
 
-    let posCounter = 0
-
     function onDragStart0(source, piece, position, orientation) {
         onDragStart(source, piece, position, orientation, 0)
     }
@@ -39,9 +39,7 @@ function init () {
     function onDragStart3(source, piece, position, orientation) {
         onDragStart(source, piece, position, orientation, 3)
     }
-
     const onDragStartList = [onDragStart0, onDragStart1, onDragStart2, onDragStart3]
-
     function onDragStart(source, piece, position, orientation, boardNumber) {
 
         const game = gameList[boardNumber]
@@ -68,9 +66,7 @@ function init () {
     function onDrop3(source, target) {
         onDrop(source, target, 3)
     }
-
     const onDropList = [onDrop0, onDrop1, onDrop2, onDrop3]
-
     function onDrop(source, target, boardNumber) {
         const game = gameList[boardNumber]
 
@@ -94,6 +90,14 @@ function init () {
                 case 1:
                     useMinMax(3, 'b', boardNumber)
                     break
+                case 2:
+                    useAlphaBeta(3, 'b', boardNumber, false)
+                    break
+                case 3:
+                    console.log("start")
+                    useAlphaBeta(3, 'b', boardNumber, true)
+                    console.log("done")
+                    break
             }
             updateStatus(boardNumber)
         }
@@ -105,17 +109,22 @@ function init () {
         game.move(moves[Math.floor(Math.random() * moves.length)])
     }
 
-    function useMinMax(depth, color, boardNumber) {
+    function useMinMax(depth, color, boardNumber, positional) {
         const game = gameList[boardNumber]
 
         const maxing = (color === 'w')
-        posCounter = 0
         let bestMove = minMax(game, depth, maxing, true)
         game.move(bestMove)
     }
 
+    function useAlphaBeta(depth, color, boardNumber, positional) {
+        const game = gameList[boardNumber]
+        let bestMove = alphaBeta(game, -99999, 99999, depth, color === 'w', true, positional)
+        game.move(bestMove)
+    }
+
     function minMax(game, depth, maxing, root) {
-        if (depth === 0) return evaluatePosition(game)
+        if (depth === 0) return evaluatePosition(game, false)
 
         const sign = maxing ? 1 : -1;
         const moves = game.moves()
@@ -133,53 +142,210 @@ function init () {
             game.undo()
         }
 
-
         return root ? bestMove : currentBest
     }
 
-    // function alphaBeta(alpha, beta, dept, maxing, root) {
-    //
-    // }
+    function alphaBeta(game, alpha, beta, depth, maxing, root, positional) {
+        if (depth === 0) {
+            return evaluatePosition(game, positional)
+        }
+
+        const moves = game.moves()
+
+        const sign = maxing ? 1 : -1
+        let bestMove = moves[0]
+
+        let value = 99999 * -sign
+        for (let i = 0; i < moves.length; i++) {
+            game.move(moves[i])
+            const retVal = alphaBeta(game, alpha, beta, depth-1, !maxing, false, positional)
+            game.undo()
+
+            if (value * sign < retVal * sign) {
+                value = retVal
+                bestMove = moves[i]
+            }
+
+            if (maxing) {
+                if (value >= beta) break
+                alpha = Math.max(alpha, value)
+            } else {
+                if (value <= alpha) break
+                beta = Math.min(beta, value)
+            }
+        }
+
+        return root ? bestMove : value
+    }
+
+    const pawnPosition = [
+        [0,0,0,0,0,0,0,0],
+        [1,1,1,1,1,1,1,1],
+        [0.2,0.2,0.4,0.6,0.6,0.4,0.2,0.2],
+        [0.1, 0.1, 0.2, 0.5, 0.5, 0.2, 0.1, 0.1],
+        [0,0,0,0.4,0.4,0,0,0],
+        [0.1, 0, -0.2, 0, 0, -0.2, 0, 0.1],
+        [0.1, 0.2, 0.2, -0.4, -0.4, 0.2, 0.2, 0.1],
+        [0,0,0,0,0,0,0,0]
+      ]
+
+    const knightPosition = [
+      [-1, -0.8, -0.6, -0.6, -0.6, -0.6, -0.8, -1],
+      [-0.8, -0.4, 0, 0, 0, 0, -0.4, -0.8],
+      [-0.6, 0, 0.2, 0.3, 0.3, 0.2, 0, -0.6],
+      [-0.6, 0.1, 0.3, 0.4, 0.4, 0.3, 0.1, -0.6],
+        [-0.6, 0.1, 0.3, 0.4, 0.4, 0.3, 0.1, -0.6],
+        [-0.6, 0, 0.2, 0.3, 0.3, 0.2, 0, -0.6],
+        [-0.8, -0.4, 0, 0, 0, 0, -0.4, -0.8],
+        [-1, -0.8, -0.6, -0.6, -0.6, -0.6, -0.8, -1]
+    ]
+
+    const bishopPosition = [
+        [-1, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -1],
+        [-0.5,0,0,0,0,0,0,-0.5],
+        [-0.5, 0, 0.25, 0.5, 0.5, 0.25, 0, -0.5],
+        [-0.5, 0.25, 0.25, 0.5, 0.5, 0.25, 0.25, -0.5],
+        [-0.5, 0.25, 0.25, 0.5, 0.5, 0.25, 0.25, -0.5],
+        [-0.5, 0, 0.25, 0.5, 0.5, 0.25, 0, -0.5],
+        [-0.5,0.5,0,0,0,0,0.5,-0.5],
+        [-1, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -1]
+    ]
+
+    const kingPosition = [
+      [-0.6, -0.8, -0.8, -1, -1, -0.8, -0.8, -0.6],
+        [-0.6, -0.8, -0.8, -1, -1, -0.8, -0.8, -0.6],
+        [-0.6, -0.8, -0.8, -1, -1, -0.8, -0.8, -0.6],
+        [-0.6, -0.8, -0.8, -1, -1, -0.8, -0.8, -0.6],
+        [-0.4, -0.6, -0.6, -0.8, -0.8, -0.6, -0.6, -0.4],
+        [-0.2,-0.4,-0.4,-0.4,-0.4,-0.4,-0.4,-0.2],
+        [0.4,0.4,-0.05,-0.05,-0.05,-0.05,0.4,0.4],
+        [0.4, 0.6, -0.05, -0.05, 0 ,-0.05, 0.6, 0.4]
+    ]
+
+    const queenPosition = [
+      [-0.4,-0.2,-0.2,-0.1,-0.1,-0.2,-0.2,-0.4],
+        [-0.2, 0, 0, 0, 0, 0, 0, -0.2],
+        [-0.2, 0, 0.1, 0.1, 0.1, 0.1, 0, -0.2],
+        [-0.1, 0, 0.1, 0.1, 0.1, 0.1, 0, -0.1],
+        [0,0,0.1,0.1,0.1,0.1,0,-0.1],
+        [-0.2,0.1,0.1,0.1,0.1,0.1,0,-0.2],
+        [-0.2, 0, 0.1, 0, 0, 0, 0, -0.2],
+        [-0.4, -0.2, -0.2, -0.1, -0.1, -0.2, -0.2, -0.4]
+    ]
+
+    const rookPosition = [
+        [0,0,0,0,0,0,0,0],
+        [0.5,1,1,1,1,1,1,0.5],
+        [-0.5,0,0,0,0,0,0,-0.5],
+        [-0.5,0,0,0,0,0,0,-0.5],
+        [-0.5,0,0,0,0,0,0,-0.5],
+        [-0.5,0,0,0,0,0,0,-0.5],
+        [-0.5,0,0,0,0,0,0,-0.5],
+        [0,0,0,0.5,0.5,0,0,0]
+    ]
+
 
     function evaluatePosition(game, positional) {
         const grid = game.board()
-        let current = 0;
+        let current = 0.0;
 
         function positionalVal (piece, i, j) {
-            return 0
-        }
-
-        function pieceVal(piece) {
-            if (piece === null) return 0
-            var val;
+            if (piece == null) return 0.0;
+            let matrix = [[]]
+            let uselessnessMultiplier = 1.0
+            let pieceImportance = 0.1
+            let base = 0.0
 
             switch (piece.type) {
                 case 'p':
-                    val = 1
+                    base = 1.0
+                    matrix = pawnPosition
+                    uselessnessMultiplier = 1.0
                     break
                 case 'n':
-                    val = 3
+                    base = 3.0
+                    matrix = knightPosition
+                    uselessnessMultiplier = 1.0
                     break
                 case 'b':
-                    val = 3.5
+                    base = 3.3
+                    matrix = bishopPosition
+                    uselessnessMultiplier = 1.0
                     break
                 case 'r':
-                    val = 5
+                    base = 5.0
+                    matrix = rookPosition
+                    uselessnessMultiplier = 1.0
                     break
                 case 'q':
-                    val = 9
+                    base = 9.0
+                    matrix = queenPosition
+                    uselessnessMultiplier = 1.0
                     break
                 case 'k':
-                    val = 90
+                    base = 90.0
+                    matrix = kingPosition
+                    uselessnessMultiplier = 4.0
                     break
             }
 
-            return val * (piece.color === "w" ? 1 : -1)
+            let sign = -1.0
+
+            if (piece.color === 'b') {
+                matrix = matrix.reverse()
+            } else {
+                sign = 1.0
+            }
+
+            return (base + matrix[i][j] * uselessnessMultiplier * pieceImportance) * sign
         }
 
-        for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-                current += pieceVal(grid[i][j]) + ((positional && grid[i][j] != null) ? positionalVal(grid[i][j], i, j) : 0)
+        function pieceVal (piece) {
+            if (piece == null) return 0;
+            let base = 0
+
+            switch (piece.type) {
+                case 'p':
+                    base = 1
+                    break
+                case 'n':
+                    base = 3
+                    break
+                case 'b':
+                    base = 3.3
+                    break
+                case 'r':
+                    base = 5
+                    break
+                case 'q':
+                    base = 9
+                    break
+                case 'k':
+                    base = 90
+                    break
+            }
+
+            let sign = 1
+
+            if (piece.color === 'b') {
+            } else {
+                sign = -1
+            }
+
+            return base * sign
+        }
+
+        if (positional) {
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    current += positionalVal(grid[i][j], i, j)
+                }
+            }
+        } else {
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    current += pieceVal(grid[i][j])
+                }
             }
         }
         return current
@@ -247,40 +413,28 @@ function init () {
         pgnObj.html(game.pgn())
     }
 
-    const fen = "1rb3kr/pp1p1p2/2p2B1p/8/4Q3/P4N2/1PP2PPP/nN2R1K1 w - - 4 23"
-
     function config(boardNumber) {
         return {
             draggable: true,
-            position: fen,
+            position: 'start',
             onDragStart: onDragStartList[boardNumber],
             onDrop: onDropList[boardNumber],
             onSnapEnd: onSnapEndList[boardNumber]
         }
     }
 
-    board0 = Chessboard('board0', config(0))
-    board1 = Chessboard('board1', config(1))
-    // board2 = Chessboard('board2', config(2))
-    // board3 = Chessboard('board3', config(3))
-
-    const boardList = [board0, board1, board2, board3]
-
-    $('#startBtn0').on('click', () => resetGame(0))
-    $('#startBtn1').on('click', () => resetGame(1))
-    // $('#startBtn2').on('click', board2.start)
-    // $('#startBtn3').on('click', board3.start)
-
-
-
     function resetGame(boardNumber) {
         boardList[boardNumber].start()
         gameList[boardNumber].reset()
+        updateStatus(boardNumber)
     }
 
-    gameList[1].load(fen)
+    for (let i = 0; i < boardList.length; i++) {
 
-    updateStatus(0)
-    updateStatus(1)
+        boardList[i] = new Chessboard("board" + i, config(i))
+        $('#startBtn' + i).on('click', () => resetGame(i))
+        updateStatus(i)
+    }
+
 }
 $(document).ready(init)
