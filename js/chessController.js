@@ -94,9 +94,7 @@ function init () {
                     useAlphaBeta(3, 'b', boardNumber, false)
                     break
                 case 3:
-                    console.log("start")
                     useAlphaBeta(3, 'b', boardNumber, true)
-                    console.log("done")
                     break
             }
             updateStatus(boardNumber)
@@ -325,11 +323,10 @@ function init () {
                     break
             }
 
-            let sign = 1
+            let sign = -1
 
-            if (piece.color === 'b') {
-            } else {
-                sign = -1
+            if (piece.color !== 'b') {
+                sign = 1
             }
 
             return base * sign
